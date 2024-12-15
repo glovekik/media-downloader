@@ -12,16 +12,16 @@
     
     <!-- Use div instead of <a> and <a2> -->
     <div>
-      <input type="text" placeholder="Enter Your Link" id="linkInput">
+      <input type="text" placeholder="Enter Your Link">
     </div>
     <div>
-      <button id="downloadBtn">Download Now!!!</button>
+      <button>Download Now!!!</button>
     </div>
 
     <script>
       document.addEventListener("DOMContentLoaded", function () {
-          const inputField = document.getElementById('linkInput');
-          const downloadButton = document.getElementById('downloadBtn');
+          const inputField = document.querySelector('input[type="text"]');
+          const downloadButton = document.querySelector('button');
           
           downloadButton.addEventListener("click", function () {
               const link = inputField.value.trim();
@@ -31,7 +31,6 @@
                   return;
               }
 
-              // Send the link to your backend
               fetch("https://media-downloader-backend-nine.vercel.app/download", {
                   method: "POST",
                   headers: {
@@ -41,16 +40,15 @@
               })
               .then(response => response.json())
               .then(data => {
-                  // Handle success or error response from backend
                   if (data.message) {
-                      alert(data.message);  // Show success message
+                      alert(data.message);  // Display success message
                   } else if (data.error) {
-                      alert(data.error);    // Show error message
+                      alert(data.error);    // Display error message
                   }
               })
               .catch(error => {
                   console.error('Error:', error);
-                  alert('An error occurred. Please try again.');
+                  alert('An error occurred. Please try again.');  // Handle error
               });
           });
       });
