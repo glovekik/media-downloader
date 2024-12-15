@@ -30,8 +30,8 @@
           downloadButton.addEventListener("click", function () {
               const link = inputField.value.trim();
               
-              // Simple Validation for YouTube Link
-              const youtubeLinkPattern = /^https:\/\/(www\.)?youtube\.com\/.+/;
+              // Simple Validation for YouTube Link (Extended to include youtu.be)
+              const youtubeLinkPattern = /^(https:\/\/(www\.)?youtube\.com\/.+|https:\/\/youtu\.be\/.+)$/;
               if (link === "") {
                   alert("Please enter a link!");
                   return;
@@ -53,7 +53,12 @@
                   },
                   body: JSON.stringify({ link: link })
               })
-              .then(response => response.json())
+              .then(response => {
+                  if (!response.ok) {
+                      return Promise.reject('Failed to fetch the audio!');
+                  }
+                  return response.json();
+              })
               .then(data => {
                   // Hide loading indicator and enable input/button
                   loadingIndicator.style.display = "none";
@@ -62,6 +67,7 @@
 
                   if (data.message) {
                       alert(data.message);  // Display success message
+                      inputField.value = ""; // Clear input field after success
                   } else if (data.error) {
                       alert(data.error);    // Display error message
                   }
