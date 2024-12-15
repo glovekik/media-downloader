@@ -10,26 +10,41 @@
     <h1>YouTube Downloader</h1>
     <h5>Paste Your Link in the Below Field</h5>
     
-    <!-- Use div instead of <a> and <a2> -->
+    <!-- Input and Button -->
     <div>
-      <input type="text" placeholder="Enter Your Link">
+      <input id="linkInput" type="text" placeholder="Enter Your Link" />
     </div>
     <div>
-      <button>Download Now!!!</button>
+      <button id="downloadBtn">Download Now!!!</button>
     </div>
+
+    <!-- Loading Indicator (Initially Hidden) -->
+    <div id="loading" style="display: none;">Loading...</div>
 
     <script>
       document.addEventListener("DOMContentLoaded", function () {
-          const inputField = document.querySelector('input[type="text"]');
-          const downloadButton = document.querySelector('button');
+          const inputField = document.querySelector('#linkInput');
+          const downloadButton = document.querySelector('#downloadBtn');
+          const loadingIndicator = document.querySelector('#loading');
           
           downloadButton.addEventListener("click", function () {
               const link = inputField.value.trim();
               
+              // Simple Validation for YouTube Link
+              const youtubeLinkPattern = /^https:\/\/(www\.)?youtube\.com\/.+/;
               if (link === "") {
                   alert("Please enter a link!");
                   return;
               }
+              if (!youtubeLinkPattern.test(link)) {
+                  alert("Please enter a valid YouTube link!");
+                  return;
+              }
+
+              // Show loading indicator and disable the input
+              loadingIndicator.style.display = "block";
+              inputField.disabled = true;
+              downloadButton.disabled = true;
 
               fetch("https://media-downloader-backend-nine.vercel.app/download", {
                   method: "POST",
@@ -40,6 +55,11 @@
               })
               .then(response => response.json())
               .then(data => {
+                  // Hide loading indicator and enable input/button
+                  loadingIndicator.style.display = "none";
+                  inputField.disabled = false;
+                  downloadButton.disabled = false;
+
                   if (data.message) {
                       alert(data.message);  // Display success message
                   } else if (data.error) {
@@ -49,6 +69,11 @@
               .catch(error => {
                   console.error('Error:', error);
                   alert('An error occurred. Please try again.');  // Handle error
+                  
+                  // Hide loading indicator and enable input/button
+                  loadingIndicator.style.display = "none";
+                  inputField.disabled = false;
+                  downloadButton.disabled = false;
               });
           });
       });
