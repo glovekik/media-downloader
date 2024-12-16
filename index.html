@@ -95,7 +95,7 @@
           inputField.disabled = true;
           downloadButton.disabled = true;
 
-          fetch("https://media-downloader-backend-nine.vercel.app/download", {
+          fetch("/api/download", {  // Updated URL to match Vercel rewrite
             method: "POST",
             headers: {
               "Content-Type": "application/json"
