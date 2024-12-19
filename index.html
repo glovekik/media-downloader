@@ -101,6 +101,7 @@
               return response.blob();
             })
             .then((blob) => {
+              console.log(blob)
               loadingIndicator.style.display = "none";
               inputField.disabled = false;
               downloadButton.disabled = false;
