@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>YouTube Downloader</title>
-    <link rel="stylesheet" href="styles.css" />
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -12,7 +11,8 @@
         margin-top: 50px;
         color: #333;
       }
-      input, button {
+      input,
+      button {
         padding: 10px;
         margin: 10px;
         font-size: 16px;
@@ -46,14 +46,14 @@
   <body>
     <h1>YouTube Downloader</h1>
     <h5>Paste Your Link in the Field Below</h5>
-    
+
     <!-- Input and Button -->
     <div>
-      <input 
-        id="linkInput" 
-        type="text" 
-        placeholder="Enter Your Link" 
-        aria-label="YouTube link input" 
+      <input
+        id="linkInput"
+        type="text"
+        placeholder="Enter Your Link"
+        aria-label="YouTube link input"
       />
     </div>
     <div>
@@ -62,9 +62,12 @@
 
     <!-- Loading Indicator -->
     <div id="loading">
-      <img src="spinner.gif" alt="Loading..." />
+      <img src="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.2/animate.min.css" alt="Loading..." />
       <p>Processing your request...</p>
     </div>
+
+    <!-- Error Message -->
+    <div id="error-message" style="color: red; display: none;"></div>
 
     <noscript>
       <p>Please enable JavaScript to use this application.</p>
@@ -72,13 +75,14 @@
 
     <script>
       document.addEventListener("DOMContentLoaded", function () {
-        const inputField = document.querySelector('#linkInput');
-        const downloadButton = document.querySelector('#downloadBtn');
-        const loadingIndicator = document.querySelector('#loading');
-        
+        const inputField = document.querySelector("#linkInput");
+        const downloadButton = document.querySelector("#downloadBtn");
+        const loadingIndicator = document.querySelector("#loading");
+        const errorMessage = document.querySelector("#error-message");
+
         downloadButton.addEventListener("click", function () {
           const link = inputField.value.trim();
-          
+
           // Simple Validation for YouTube Link
           const youtubeLinkPattern = /^(https:\/\/(www\.)?youtube\.com\/.+|https:\/\/youtu\.be\/.+)$/;
           if (link === "") {
@@ -94,44 +98,49 @@
           loadingIndicator.style.display = "block";
           inputField.disabled = true;
           downloadButton.disabled = true;
+          errorMessage.style.display = "none"; // Hide error message
 
-          fetch("/api/download", {  // Updated URL to match Vercel rewrite
+          fetch("https://media-downloader-backend-production.up.railway.app/download", {
             method: "POST",
             headers: {
-              "Content-Type": "application/json"
+              "Content-Type": "application/json",
             },
-            body: JSON.stringify({ link: link })
+            body: JSON.stringify({ link: link }),
           })
-          .then(response => {
-            if (!response.ok) {
-              throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            return response.json().catch(() => ({ error: "Invalid JSON response from server" }));
-          })
-          .then(data => {
-            // Hide loading indicator and enable input/button
-            loadingIndicator.style.display = "none";
-            inputField.disabled = false;
-            downloadButton.disabled = false;
+            .then((response) => {
+              console.log(response)
+              if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+              }
+              return response.json();
+            })
+            .then((data) => {
+              loadingIndicator.style.display = "none";
+              inputField.disabled = false;
+              downloadButton.disabled = false;
 
-            if (data.downloadUrl) {
-              window.open(data.downloadUrl, "_blank"); // Open download link
-            } else if (data.message) {
-              alert(data.message); // Display success message
-              inputField.value = ""; // Clear input field after success
-            } else if (data.error) {
-              alert(data.error); // Display error message
-            }
-          })
-          .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred. Please try again.'); // Handle error
-            
-            // Hide loading indicator and enable input/button
-            loadingIndicator.style.display = "none";
-            inputField.disabled = false;
-            downloadButton.disabled = false;
-          });
+              if (data.message) {
+                alert(data.message);
+                inputField.value = ""; // Clear input on success
+                
+                // Redirect to download the file
+                const downloadLink = data.downloadUrl; // Assuming it returns the correct download URL
+                window.location.href = `https://media-downloader-backend-production.up.railway.app/${downloadLink}`; // Correct download link
+              } else if (data.error) {
+                alert(data.error); // Display error message
+              }
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+              alert("An error occurred. Please try again.");
+              
+              // Reset UI on error
+              loadingIndicator.style.display = "none";
+              inputField.disabled = false;
+              downloadButton.disabled = false;
+              errorMessage.textContent = "An error occurred while processing your request.";
+              errorMessage.style.display = "block";
+            });
         });
       });
     </script>
