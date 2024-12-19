@@ -1,68 +1,150 @@
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const inputField = document.querySelector("#linkInput");
-    const downloadButton = document.querySelector("#downloadBtn");
-    const loadingIndicator = document.querySelector("#loading");
-    const errorMessage = document.querySelector("#error-message");
-
-    downloadButton.addEventListener("click", function () {
-      const link = inputField.value.trim();
-
-      // Simple Validation for YouTube Link
-      const youtubeLinkPattern = /^(https:\/\/(www\.)?youtube\.com\/.+|https:\/\/youtu\.be\/.+)$/;
-      if (link === "") {
-        alert("Please enter a link!");
-        return;
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YouTube Downloader</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        margin-top: 50px;
+        color: #333;
       }
-      if (!youtubeLinkPattern.test(link)) {
-        alert("Please enter a valid YouTube link!");
-        return;
+      input,
+      button {
+        padding: 10px;
+        margin: 10px;
+        font-size: 16px;
       }
+      input {
+        width: 300px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+      button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+        border-radius: 5px;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      #loading {
+        margin-top: 20px;
+        font-style: italic;
+        display: none;
+      }
+      #loading img {
+        width: 30px;
+        height: 30px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>YouTube Downloader</h1>
+    <h5>Paste Your Link in the Field Below</h5>
 
-      // Show loading indicator and disable the input
-      loadingIndicator.style.display = "block";
-      inputField.disabled = true;
-      downloadButton.disabled = true;
-      errorMessage.style.display = "none"; // Hide error message
+    <!-- Input and Button -->
+    <div>
+      <input
+        id="linkInput"
+        type="text"
+        placeholder="Enter Your Link"
+        aria-label="YouTube link input"
+      />
+    </div>
+    <div>
+      <button id="downloadBtn" aria-label="Download button">Download Now!!!</button>
+    </div>
 
-      fetch("https://media-downloader-backend-production.up.railway.app/download", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ link: link }),
-      })
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
+    <!-- Loading Indicator -->
+    <div id="loading">
+      <p>Processing your request...</p>
+    </div>
+
+    <!-- Error Message -->
+    <div id="error-message" style="color: red; display: none;"></div>
+
+    <noscript>
+      <p>Please enable JavaScript to use this application.</p>
+    </noscript>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const inputField = document.querySelector("#linkInput");
+        const downloadButton = document.querySelector("#downloadBtn");
+        const loadingIndicator = document.querySelector("#loading");
+        const errorMessage = document.querySelector("#error-message");
+
+        downloadButton.addEventListener("click", function () {
+          const link = inputField.value.trim();
+
+          // Simple Validation for YouTube Link
+          const youtubeLinkPattern = /^(https:\/\/(www\.)?youtube\.com\/.+|https:\/\/youtu\.be\/.+)$/;
+          if (link === "") {
+            alert("Please enter a link!");
+            return;
           }
-          return response.json();
-        })
-        .then((data) => {
-          loadingIndicator.style.display = "none";
-          inputField.disabled = false;
-          downloadButton.disabled = false;
-
-          if (data.downloadUrl) {
-            // Redirect to the download URL
-            window.location.href = data.downloadUrl;
-          } else if (data.error) {
-            alert(data.error); // Display error message
-          } else {
-            alert("Unexpected response from server.");
+          if (!youtubeLinkPattern.test(link)) {
+            alert("Please enter a valid YouTube link!");
+            return;
           }
-        })
-        .catch((error) => {
-          console.error("Error:", error);
-          alert("An error occurred. Please try again.");
-          
-          // Reset UI on error
-          loadingIndicator.style.display = "none";
-          inputField.disabled = false;
-          downloadButton.disabled = false;
-          errorMessage.textContent = "An error occurred while processing your request.";
-          errorMessage.style.display = "block";
+
+          // Show loading indicator and disable the input
+          loadingIndicator.style.display = "block";
+          inputField.disabled = true;
+          downloadButton.disabled = true;
+          errorMessage.style.display = "none";
+
+          fetch("http://127.0.0.1:5000/download", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ link: link }),
+          })
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+              }
+              return response.blob(); // Get the file as a blob
+            })
+            .then((blob) => {
+              loadingIndicator.style.display = "none";
+              inputField.disabled = false;
+              downloadButton.disabled = false;
+
+              // Create a temporary link to trigger download
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.style.display = "none";
+              a.href = url;
+
+              // Set the file name
+              a.download = "downloaded_audio.mp3";
+              document.body.appendChild(a);
+              a.click();
+
+              // Clean up the temporary link
+              window.URL.revokeObjectURL(url);
+              document.body.removeChild(a);
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+              alert("An error occurred. Please try again.");
+
+              // Reset UI on error
+              loadingIndicator.style.display = "none";
+              inputField.disabled = false;
+              downloadButton.disabled = false;
+              errorMessage.textContent = "An error occurred while processing your request.";
+              errorMessage.style.display = "block";
+            });
         });
-    });
-  });
-</script>
+      });
+    </script>
+  </body>
+</html>
