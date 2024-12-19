@@ -100,8 +100,7 @@
               // Trigger download directly from the response
               return response.blob();
             })
-            .then(({ blob, filename }) => {
-              console.log(filename)
+            .then((blob) => {
               loadingIndicator.style.display = "none";
               inputField.disabled = false;
               downloadButton.disabled = false;
