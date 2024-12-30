@@ -1,135 +1,137 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>YouTube Music Downloader</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        text-align: center;
-        margin-top: 50px;
-        color: #333;
-      }
-      input,
-      button {
-        padding: 10px;
-        margin: 10px;
-        font-size: 16px;
-      }
-      input {
-        width: 300px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-      }
-      button {
-        background-color: #007bff;
-        color: white;
-        border: none;
-        cursor: pointer;
-        border-radius: 5px;
-      }
-      button:hover {
-        background-color: #0056b3;
-      }
-      #loading {
-        margin-top: 20px;
-        font-style: italic;
-        display: none;
-      }
-      #error-message {
-        color: red;
-        display: none;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>YouTube Music Downloader</h1>
-    <h5>Paste Your Link in the Field Below</h5>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube Downloader</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 50px;
+      color: #333;
+    }
+    input, button, select {
+      padding: 10px;
+      margin: 10px;
+      font-size: 16px;
+    }
+    input {
+      width: 300px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    #loading {
+      margin-top: 20px;
+      font-style: italic;
+      display: none;
+    }
+    #error-message {
+      color: red;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>YouTube Downloader</h1>
+  <h5>Paste the YouTube link and select format</h5>
 
-    <div>
-      <input id="linkInput" type="text" placeholder="Enter YouTube link" aria-label="YouTube link input" />
-    </div>
-    <div>
-      <button id="downloadBtn" aria-label="Download button">Download Now</button>
-    </div>
+  <div>
+    <input id="linkInput" type="text" placeholder="Enter YouTube link" aria-label="YouTube link input" />
+  </div>
+  <div>
+    <select id="formatSelect">
+      <option value="mp3">MP3</option>
+      <option value="mp4">MP4</option>
+    </select>
+  </div>
+  <div>
+    <button id="downloadBtn" aria-label="Download button">Download</button>
+  </div>
 
-    <div id="loading">
-      <p>Processing your request...</p>
-    </div>
-    <div id="error-message"></div>
+  <div id="loading">
+    <p>Processing your request...</p>
+  </div>
+  <div id="error-message"></div>
 
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const inputField = document.querySelector("#linkInput");
-        const downloadButton = document.querySelector("#downloadBtn");
-        const loadingIndicator = document.querySelector("#loading");
-        const errorMessage = document.querySelector("#error-message");
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const linkInput = document.querySelector("#linkInput");
+      const formatSelect = document.querySelector("#formatSelect");
+      const downloadButton = document.querySelector("#downloadBtn");
+      const loadingIndicator = document.querySelector("#loading");
+      const errorMessage = document.querySelector("#error-message");
 
-        downloadButton.addEventListener("click", function () {
-          const link = inputField.value.trim();
+      downloadButton.addEventListener("click", function () {
+        const link = linkInput.value.trim();
+        const format = formatSelect.value;
 
-          // Simple validation
-          const youtubeLinkPattern = /^(https:\/\/(www\.)?youtube\.com\/.+|https:\/\/youtu\.be\/.+)$/;
-          if (link === "") {
-            alert("Please enter a link!");
-            return;
-          }
-          if (!youtubeLinkPattern.test(link)) {
-            alert("Please enter a valid YouTube link!");
-            return;
-          }
+        const youtubeLinkPattern = /^(https:\/\/(www\.)?youtube\.com\/.+|https:\/\/youtu\.be\/.+)$/;
+        if (!link) {
+          alert("Please enter a YouTube link!");
+          return;
+        }
+        if (!youtubeLinkPattern.test(link)) {
+          alert("Please enter a valid YouTube link!");
+          return;
+        }
 
-          loadingIndicator.style.display = "block";
-          inputField.disabled = true;
-          downloadButton.disabled = true;
-          errorMessage.style.display = "none";
+        loadingIndicator.style.display = "block";
+        linkInput.disabled = true;
+        formatSelect.disabled = true;
+        downloadButton.disabled = true;
+        errorMessage.style.display = "none";
 
-          fetch("https://media-downloader-backend-production.up.railway.app/download", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ link }),
+        fetch("https://media-downloader-backend-production.up.railway.app/download", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ link, format }),
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.blob();
           })
-            .then((response) => {
-              if (!response.ok) {
-                throw new Error(HTTP error! Status: ${response.status});
-              }
+          .then((blob) => {
+            loadingIndicator.style.display = "none";
+            linkInput.disabled = false;
+            formatSelect.disabled = false;
+            downloadButton.disabled = false;
 
-              // Trigger download directly from the response
-              return response.blob();
-            })
-            .then((blob) => {
-              console.log(blob)
-              loadingIndicator.style.display = "none";
-              inputField.disabled = false;
-              downloadButton.disabled = false;
-
-              // Create a download link
-              const url = window.URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.style.display = "none";
-              a.href = url;
-
-              // Suggest the filename
-              a.download = "YouTube_Audio.mp3";
-              document.body.appendChild(a);
-              a.click();
-              window.URL.revokeObjectURL(url);
-            })
-            .catch((error) => {
-              console.error("Error:", error);
-              alert("An error occurred. Please try again.");
-              loadingIndicator.style.display = "none";
-              inputField.disabled = false;
-              downloadButton.disabled = false;
-              errorMessage.textContent = "An error occurred while processing your request.";
-              errorMessage.style.display = "block";
-            });
-        });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.style.display = "none";
+            a.href = url;
+            a.download = `download.${format}`; // Let the backend provide the filename
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            alert("An error occurred. Please try again.");
+            loadingIndicator.style.display = "none";
+            linkInput.disabled = false;
+            formatSelect.disabled = false;
+            downloadButton.disabled = false;
+            errorMessage.textContent = "An error occurred while processing your request.";
+            errorMessage.style.display = "block";
+          });
       });
-    </script>
-  </body>
+    });
+  </script>
+</body>
 </html>
-
